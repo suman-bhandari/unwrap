@@ -20,7 +20,11 @@ export default function GiftPage({ params }: GiftPageProps) {
     videoUrl?: string;
     giftImageUrl?: string;
     qrCodeUrl?: string;
-    reservationDetails?: any;
+    reservationDetails?: {
+      venue?: string;
+      city?: string;
+      dateTime?: string;
+    };
     scheduledFor?: string;
     isOpened: boolean;
     openedAt?: string;
@@ -137,7 +141,7 @@ export default function GiftPage({ params }: GiftPageProps) {
         countdown
       });
     }
-  }, [gift?.dateTime, gift?.isOpened, isCalculatingCountdown, countdown]);
+  }, [gift, gift?.dateTime, gift?.isOpened, isCalculatingCountdown, countdown]);
 
   const handleUnwrap = async () => {
     if (countdown > 0) {

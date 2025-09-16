@@ -26,7 +26,7 @@ export const TextRevealButton = React.forwardRef<
         fontSize: '2em',
         letterSpacing: '3px',
         color: 'transparent',
-        WebkitTextStroke: `1px ${strokeColor}` as any,
+        WebkitTextStroke: `1px ${strokeColor}`,
         ...style,
       }}
       {...props}
@@ -38,12 +38,12 @@ export const TextRevealButton = React.forwardRef<
         style={{
           color: revealGradient ? 'transparent' : revealColor,
           borderRight: `6px solid ${revealColor}`,
-          WebkitTextStroke: revealGradient ? undefined : (`1px ${revealColor}` as any),
+          WebkitTextStroke: revealGradient ? undefined : `1px ${revealColor}`,
           filter: 'drop-shadow(0 0 23px #FFD700)',
           backgroundImage: revealGradient,
-          WebkitBackgroundClip: revealGradient ? ('text' as any) : undefined,
+          WebkitBackgroundClip: revealGradient ? 'text' : undefined,
           backgroundClip: revealGradient ? 'text' : undefined,
-          WebkitTextFillColor: revealGradient ? ('transparent' as any) : undefined,
+          WebkitTextFillColor: revealGradient ? 'transparent' : undefined,
         }}
       >
         &nbsp;{text}&nbsp;

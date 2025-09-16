@@ -119,7 +119,7 @@ export default function CreateGiftPage() {
       console.log('Auto-generating link for Create Link delivery method');
       generateShareableLink();
     }
-  }, [currentStep, deliveryMethod, generatedLink, generateShareableLink]);
+  }, [currentStep, deliveryMethod, generatedLink]);
 
   const generateShareableLink = async () => {
     console.log('generateShareableLink called');
@@ -217,7 +217,7 @@ export default function CreateGiftPage() {
           border: '1px solid #bbf7d0'
         }
       });
-    } catch (error) {
+    } catch (err) {
       toast.error('Failed to copy link. Please try again.', {
         style: {
           backgroundColor: '#fef2f2',
