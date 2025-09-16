@@ -113,14 +113,6 @@ export default function CreateGiftPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Auto-generate link when Create Link is selected
-  useEffect(() => {
-    if (currentStep === 3 && deliveryMethod === 'link' && !generatedLink) {
-      console.log('Auto-generating link for Create Link delivery method');
-      generateShareableLink();
-    }
-  }, [currentStep, deliveryMethod, generatedLink, generateShareableLink]);
-
   const generateShareableLink = useCallback(async () => {
     console.log('generateShareableLink called');
     setIsGeneratingLink(true);
@@ -206,6 +198,14 @@ export default function CreateGiftPage() {
       setIsGeneratingLink(false);
     }
   }, [formData]);
+
+  // Auto-generate link when Create Link is selected
+  useEffect(() => {
+    if (currentStep === 3 && deliveryMethod === 'link' && !generatedLink) {
+      console.log('Auto-generating link for Create Link delivery method');
+      generateShareableLink();
+    }
+  }, [currentStep, deliveryMethod, generatedLink, generateShareableLink]);
 
   const copyToClipboard = async () => {
     try {
