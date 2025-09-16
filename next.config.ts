@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Optimize for production
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+  },
+  // Enable static optimization
+  output: 'standalone',
+  // Optimize images
+  images: {
+    formats: ['image/webp', 'image/avif'],
+  },
 };
 
 export default nextConfig;

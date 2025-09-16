@@ -1,103 +1,125 @@
-import Image from "next/image";
+'use client';
+
+import { motion } from 'framer-motion';
+import { ArrowRight, Gift, Crown } from 'lucide-react';
+import Link from 'next/link';
+import { LogoText } from '@/components/Logo';
+import { TextRevealButton } from '@/components/ui/shadcn-io/text-reveal-button';
+import { PremiumSection, PremiumCard } from '@/components/PremiumSection';
+import { OrbCard } from '@/components/OrbCard';
+import { Button } from '@/components/ui/button';
+ 
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-b border-emerald-200/30">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <motion.div 
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <img 
+                src="/unwrap_log.svg" 
+                alt="Unwrap Logo" 
+                className="h-16 w-auto"
+              />
+              <TextRevealButton
+                text="Unwrap"
+                revealColor="#FFD700"
+                revealGradient="linear-gradient(90deg, #B347FF, #FFB800, #37FF8B)"
+                className="hidden sm:block"
+              />
+            </motion.div>
+            
+            <motion.div
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Link href="/login">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button className="hover-lift bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0">
+                    Sign In
+                  </Button>
+                </motion.div>
+              </Link>
+            </motion.div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </header>
+
+      {/* Orb Card Hero Section */}
+      <div className="pt-28 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <OrbCard />
+        </div>
+      </div>
+
+      {/* Experience Categories Section (temporarily hidden) */}
+      {false && (
+        <PremiumSection id="experiences" background="light" className="section-spacing-sm">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Gift Unforgettable Experiences
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                From intimate dinners to grand concerts, create memories that last a lifetime
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { icon: "🍽️", title: "Fine Dining", description: "Michelin-starred restaurants, wine tastings, chef's table experiences" },
+                { icon: "🎵", title: "Concerts & Shows", description: "Live music, Broadway shows, comedy clubs, exclusive performances" },
+                { icon: "⚽", title: "Sports & Games", description: "VIP tickets, stadium tours, meet & greets, championship games" },
+                { icon: "🎭", title: "Cultural Events", description: "Museum exhibitions, art galleries, theater productions, festivals" }
+              ].map((category, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="text-center p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  <div className="text-6xl mb-4">{category.icon}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{category.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{category.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </PremiumSection>
+      )}
+
+
+
+      {/* Footer */}
+      <div className="mt-10">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="text-center">
+            <motion.div 
+              className="mb-2 text-lg text-[#00414e]"
+              whileHover={{ scale: 1.05 }}
+            >
+              © 2025 <span className="bg-gradient-to-r from-[#B347FF] via-[#FFB800] to-[#37FF8B] bg-clip-text text-transparent font-semibold">Unwrap</span>. All rights reserved.
+            </motion.div>
+            <div className="text-sm text-[#00414e]">
+              Premium Experience Gift Platform
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
