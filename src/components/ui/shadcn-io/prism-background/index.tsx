@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, forwardRef } from "react";
-// @ts-expect-error
+// @ts-expect-error - OGL library types are not available
 import { Renderer, Triangle, Program, Mesh } from "ogl";
 import { cn } from '@/lib/utils';
 

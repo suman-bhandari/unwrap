@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Send, ArrowLeft, Mail, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -119,9 +119,9 @@ export default function CreateGiftPage() {
       console.log('Auto-generating link for Create Link delivery method');
       generateShareableLink();
     }
-  }, [currentStep, deliveryMethod, generatedLink]);
+  }, [currentStep, deliveryMethod, generatedLink, generateShareableLink]);
 
-  const generateShareableLink = async () => {
+  const generateShareableLink = useCallback(async () => {
     console.log('generateShareableLink called');
     setIsGeneratingLink(true);
     try {
@@ -205,7 +205,7 @@ export default function CreateGiftPage() {
     } finally {
       setIsGeneratingLink(false);
     }
-  };
+  }, [formData]);
 
   const copyToClipboard = async () => {
     try {
@@ -217,7 +217,7 @@ export default function CreateGiftPage() {
           border: '1px solid #bbf7d0'
         }
       });
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy link. Please try again.', {
         style: {
           backgroundColor: '#fef2f2',
