@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User } from 'lucide-react';
 import { toast } from 'sonner';
 import { PostcardPreview } from '@/components/PostcardPreview';
 
@@ -13,8 +12,21 @@ interface GiftPageProps {
 }
 
 export default function GiftPage({ params }: GiftPageProps) {
-  const [gift, setGift] = useState<any>(null);
-  const [isUnwrapped, setIsUnwrapped] = useState(false);
+  const [gift, setGift] = useState<{
+    id: string;
+    recipientName: string;
+    title: string;
+    message: string;
+    videoUrl?: string;
+    giftImageUrl?: string;
+    qrCodeUrl?: string;
+    reservationDetails?: any;
+    scheduledFor?: string;
+    isOpened: boolean;
+    openedAt?: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -28,7 +40,7 @@ export default function GiftPage({ params }: GiftPageProps) {
         setLoading(true);
         const resolvedParams = await params;
         const gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
-        const foundGift = gifts.find((g: any) => g.id === resolvedParams.id);
+        const foundGift = gifts.find((g: { id: string }) => g.id === resolvedParams.id);
         console.log('Found gift from localStorage:', foundGift);
         console.log('Gift dateTime field:', foundGift?.dateTime);
         console.log('Gift scheduledFor field:', foundGift?.scheduledFor);
@@ -147,7 +159,7 @@ export default function GiftPage({ params }: GiftPageProps) {
     
     // Track gift opening
     try {
-      setGift((prev: any) => ({ ...prev, isOpened: true }));
+        setGift((prev) => prev ? { ...prev, isOpened: true } : null);
       toast.success('Gift unwrapped! 🎉');
     } catch (error) {
       console.error('Error tracking gift open:', error);
@@ -207,7 +219,7 @@ export default function GiftPage({ params }: GiftPageProps) {
               <h1 className="text-4xl font-bold text-red-600">Gift Not Found</h1>
               <p className="text-lg text-muted-foreground">{error}</p>
               <p className="text-sm text-muted-foreground">
-                The gift you're looking for doesn't exist or may have been removed.
+                The gift you&apos;re looking for doesn&apos;t exist or may have been removed.
               </p>
             </div>
           ) : (

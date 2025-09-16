@@ -2,18 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Send, ArrowLeft, Sparkles, ChevronLeft, ChevronRight, Clock, Lock, Unlock, Mail, Link as LinkIcon } from 'lucide-react';
+import { Calendar, Send, ArrowLeft, Mail, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { GiftBox } from '@/components/GiftBox';
 import { TextRevealButton } from '@/components/ui/shadcn-io/text-reveal-button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { BentoGrid, BentoCard, BentoFeature } from '@/components/BentoGrid';
+import { BentoGrid, BentoCard } from '@/components/BentoGrid';
 import { AnimatedText } from '@/components/AnimatedComponents';
 import { FileUpload } from '@/components/FileUpload';
 import { VideoRecorder } from '@/components/VideoRecorder';
@@ -45,7 +44,7 @@ export default function CreateGiftPage() {
     city: ''
   });
   
-  const [giftImages, setGiftImages] = useState<File[]>([]);
+  const [giftImages] = useState<File[]>([]);
   const [qrFiles, setQrFiles] = useState<File[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [generatedLink, setGeneratedLink] = useState<string>('');
@@ -63,7 +62,6 @@ export default function CreateGiftPage() {
     { id: 3, title: 'Schedule & Send', description: 'When to deliver' },
   ];
 
-  const progress = (currentStep / steps.length) * 100;
 
   // Check authentication status
   useEffect(() => {
@@ -121,7 +119,7 @@ export default function CreateGiftPage() {
       console.log('Auto-generating link for Create Link delivery method');
       generateShareableLink();
     }
-  }, [currentStep, deliveryMethod, generatedLink]);
+  }, [currentStep, deliveryMethod, generatedLink, generateShareableLink]);
 
   const generateShareableLink = async () => {
     console.log('generateShareableLink called');
@@ -428,8 +426,8 @@ export default function CreateGiftPage() {
       } else {
         toast.error('Failed to send gift: ' + (result.error || 'Unknown error'));
       }
-    } catch (error) {
-      console.error('Send gift error:', error);
+    } catch (err) {
+      console.error('Send gift error:', err);
       toast.error('Failed to send gift. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -459,9 +457,11 @@ export default function CreateGiftPage() {
       <header className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-3">
-            <img 
+            <Image 
               src="/unwrap_log.svg" 
               alt="Unwrap Logo" 
+              width={48}
+              height={48}
               className="h-12 w-auto"
             />
             <TextRevealButton
