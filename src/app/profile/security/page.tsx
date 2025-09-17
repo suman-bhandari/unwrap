@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase';
+import { getOptimizedUserData } from '@/lib/session-optimizer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -42,7 +43,7 @@ export default function SecurityPage() {
         } else if (!user) {
           router.push('/login');
         } else {
-          setUser(user);
+          setUser(getOptimizedUserData(user));
         }
       } catch (error) {
         console.error('Error getting user:', error);

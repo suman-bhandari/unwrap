@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase';
+import { getOptimizedUserData } from '@/lib/session-optimizer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -38,8 +39,9 @@ export default function AvatarPage() {
         } else if (!user) {
           router.push('/login');
         } else {
-          setUser(user);
-          setPreviewUrl(user.user_metadata?.avatar_url || null);
+          const optimizedUser = getOptimizedUserData(user);
+          setUser(optimizedUser);
+          setPreviewUrl(optimizedUser.user_metadata?.avatar_url || null);
         }
       } catch (error) {
         console.error('Error getting user:', error);

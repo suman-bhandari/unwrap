@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, LogOut, Camera, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase';
+import { getOptimizedUserData, clearLargeCookies } from '@/lib/session-optimizer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -34,7 +35,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
         if (error) {
           console.error('Error getting user:', error);
         } else {
-          setUser(user);
+          setUser(getOptimizedUserData(user));
         }
       } catch (error) {
         console.error('Error getting user:', error);
@@ -47,7 +48,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
+      setUser(session?.user ? getOptimizedUserData(session.user) : null);
       setLoading(false);
     });
 
@@ -56,6 +57,9 @@ export function UserMenu({ className = '' }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
+      // Clear large cookies before signing out
+      clearLargeCookies();
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         toast.error('Error signing out');
