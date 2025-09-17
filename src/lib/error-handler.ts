@@ -56,28 +56,45 @@ export function setupErrorHandler() {
 function clearSessionData() {
   if (typeof window === 'undefined') return;
   
-  // Clear all cookies
+  // Clear ALL cookies aggressively
   document.cookie.split(';').forEach(cookie => {
     const [name] = cookie.split('=');
     const trimmedName = name.trim();
-    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
-    document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
-  });
-  
-  // Clear localStorage
-  Object.keys(localStorage).forEach(key => {
-    if (key.includes('supabase') || key.includes('sb-') || key.includes('auth')) {
-      localStorage.removeItem(key);
+    if (trimmedName) {
+      // Clear for all possible paths and domains
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.vercel.app`;
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.supabase.co`;
     }
   });
   
-  // Clear sessionStorage
-  Object.keys(sessionStorage).forEach(key => {
-    if (key.includes('supabase') || key.includes('sb-') || key.includes('auth')) {
-      sessionStorage.removeItem(key);
-    }
-  });
+  // Clear ALL localStorage
+  localStorage.clear();
+  
+  // Clear ALL sessionStorage
+  sessionStorage.clear();
+  
+  // Clear IndexedDB if available
+  if ('indexedDB' in window) {
+    indexedDB.databases?.().then(databases => {
+      databases.forEach(db => {
+        if (db.name) {
+          indexedDB.deleteDatabase(db.name);
+        }
+      });
+    });
+  }
+  
+  // Clear service worker caches
+  if ('caches' in window) {
+    caches.keys().then(cacheNames => {
+      cacheNames.forEach(cacheName => {
+        caches.delete(cacheName);
+      });
+    });
+  }
 }
 
 // Initialize error handler

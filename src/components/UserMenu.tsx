@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase';
 import { getOptimizedUserData, clearLargeCookies } from '@/lib/session-optimizer';
 import { clearAllSupabaseCookies, clearLargeLocalStorage } from '@/lib/header-optimizer';
+import { nuclearClean } from '@/lib/aggressive-cleaner';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -58,10 +59,8 @@ export function UserMenu({ className = '' }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
-      // Aggressively clear all session data
-      clearLargeCookies();
-      clearAllSupabaseCookies();
-      clearLargeLocalStorage();
+      // Nuclear clean everything
+      nuclearClean();
       
       const { error } = await supabase.auth.signOut();
       if (error) {

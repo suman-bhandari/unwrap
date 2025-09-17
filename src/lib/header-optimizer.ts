@@ -3,20 +3,19 @@
 export function clearAllSupabaseCookies() {
   if (typeof window === 'undefined') return;
   
-  // Clear all Supabase-related cookies
+  // Clear ALL cookies aggressively
   const cookies = document.cookie.split(';');
   cookies.forEach(cookie => {
     const [name] = cookie.split('=');
     const trimmedName = name.trim();
     
-    if (trimmedName.includes('sb-') || 
-        trimmedName.includes('supabase') || 
-        trimmedName.includes('auth-token') ||
-        trimmedName.includes('session')) {
+    if (trimmedName) {
       // Clear cookie for all possible paths and domains
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
       document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.vercel.app`;
+      document.cookie = `${trimmedName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.supabase.co`;
     }
   });
 }
@@ -24,17 +23,8 @@ export function clearAllSupabaseCookies() {
 export function clearLargeLocalStorage() {
   if (typeof window === 'undefined') return;
   
-  // Clear large localStorage items
-  const keysToCheck = Object.keys(localStorage);
-  keysToCheck.forEach(key => {
-    if (key.includes('supabase') || key.includes('sb-') || key.includes('auth')) {
-      const item = localStorage.getItem(key);
-      if (item && item.length > 2000) {
-        console.log(`Clearing large localStorage item: ${key} (${item.length} chars)`);
-        localStorage.removeItem(key);
-      }
-    }
-  });
+  // Clear ALL localStorage to prevent any large data
+  localStorage.clear();
 }
 
 export function optimizeSessionData() {
