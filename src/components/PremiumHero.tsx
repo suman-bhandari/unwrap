@@ -25,7 +25,7 @@ export function PremiumHero({
 }: PremiumHeroProps) {
   const ref = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const orbsRef = useRef<Array<{
     x: number;
     y: number;

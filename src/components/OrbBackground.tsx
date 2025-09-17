@@ -8,7 +8,7 @@ interface OrbBackgroundProps {
 
 export function OrbBackground({ className = '' }: OrbBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
   const orbsRef = useRef<Array<{
     x: number;
     y: number;
