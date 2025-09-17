@@ -143,39 +143,52 @@ export default function CreateGiftPage() {
         return;
       }
 
-      // Generate a unique ID for the gift
-      const giftId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        toast.error('Please sign in to create a gift');
+        setIsGeneratingLink(false);
+        return;
+      }
+
       // Convert video file to data URL if it exists
       const videoDataURL = videoFile ? await fileToDataURL(videoFile) : null;
       
-      // Create gift data
+      // Prepare gift data for database storage
       const giftData = {
-        id: giftId,
-        ...formData,
-        senderName: 'Gift Creator', // In a real app, get this from authenticated user
-        giftImages: giftImages.map(file => file.name),
-        qrFiles: qrFiles.map(file => file.name),
-        videoFile: videoDataURL,
-        totalFiles: giftImages.length + qrFiles.length + (videoFile ? 1 : 0),
-        isOpened: false,
-        scheduledFor: formData.scheduledFor || new Date().toISOString(),
-        createdAt: new Date().toISOString()
+        sender_id: user.id,
+        recipient_email: formData.recipientEmail,
+        recipient_name: formData.recipientName,
+        title: formData.title,
+        message: formData.message,
+        video_url: videoDataURL,
+        scheduled_for: formData.scheduledFor ? new Date(formData.scheduledFor).toISOString() : null,
+        reservation_details: {
+          venue: formData.venue,
+          dateTime: formData.dateTime,
+          city: formData.city,
+          type: 'experience'
+        }
       };
       
-      console.log('Form data before storing:', formData);
-      console.log('Gift data being stored:', giftData);
-      console.log('dateTime in formData:', formData.dateTime);
-      console.log('dateTime in giftData:', giftData.dateTime);
+      console.log('Saving gift to database:', giftData);
 
-      // Store the gift data in localStorage (in a real app, this would be stored in a database)
-      const existingGifts = JSON.parse(localStorage.getItem('gifts') || '[]');
-      existingGifts.push(giftData);
-      localStorage.setItem('gifts', JSON.stringify(existingGifts));
+      // Save to database
+      const { data: savedGift, error: saveError } = await supabase
+        .from('gifts')
+        .insert(giftData)
+        .select()
+        .single();
 
-      const link = `${window.location.origin}/gift/${giftId}`;
+      if (saveError) {
+        console.error('Error saving gift:', saveError);
+        toast.error('Failed to save gift to database');
+        setIsGeneratingLink(false);
+        return;
+      }
+
+      const link = `${window.location.origin}/gift/${savedGift.id}`;
       console.log('Generated link:', link);
-      console.log('Gift data stored:', giftData);
       setGeneratedLink(link);
       
       toast.success('Shareable link generated successfully!', {
@@ -197,7 +210,7 @@ export default function CreateGiftPage() {
     } finally {
       setIsGeneratingLink(false);
     }
-  }, [formData]);
+  }, [formData, videoFile, supabase]);
 
   // Auto-generate link when Create Link is selected
   useEffect(() => {

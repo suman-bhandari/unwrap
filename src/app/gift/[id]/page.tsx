@@ -42,61 +42,76 @@ export default function GiftPage({ params }: GiftPageProps) {
   const [isCalculatingCountdown, setIsCalculatingCountdown] = useState(true);
 
   useEffect(() => {
-    // Load gift data from localStorage
+    // Load gift data from database
     const loadGift = async () => {
       try {
         setLoading(true);
         const resolvedParams = await params;
-        const gifts = JSON.parse(localStorage.getItem('gifts') || '[]');
-        const foundGift = gifts.find((g: { id: string }) => g.id === resolvedParams.id);
-        console.log('Found gift from localStorage:', foundGift);
-        console.log('Gift dateTime field:', foundGift?.dateTime);
-        console.log('Gift scheduledFor field:', foundGift?.scheduledFor);
-        console.log('All gift fields:', Object.keys(foundGift || {}));
-        console.log('Form data keys that should be present:', ['id', 'title', 'message', 'senderName', 'recipientName', 'venue', 'dateTime', 'city', 'scheduledFor']);
-        console.log('Raw localStorage data:', localStorage.getItem('gifts'));
         
-        if (foundGift) {
-          // Transform the stored data to match the expected format
-          const transformedGift = {
-            id: foundGift.id,
-            title: foundGift.title,
-            message: foundGift.message,
-            senderName: foundGift.senderName,
-            recipientName: foundGift.recipientName,
-            scheduledFor: foundGift.scheduledFor,
-            isOpened: foundGift.isOpened || false,
-            giftImages: foundGift.giftImages || [],
-            qrFiles: foundGift.qrFiles || [],
-            videoFile: foundGift.videoFile,
-            videoUrl: foundGift.videoUrl,
-            venue: foundGift.venue,
-            dateTime: foundGift.dateTime,
-            city: foundGift.city,
-            createdAt: foundGift.createdAt || new Date().toISOString(),
-            updatedAt: foundGift.updatedAt || new Date().toISOString(),
-            reservationDetails: {
-              type: 'experience',
-              venue: foundGift.venue,
-              date: foundGift.dateTime,
-              city: foundGift.city,
-              details: foundGift.title
-            }
-          };
-          console.log('Transformed gift:', transformedGift);
-          setGift(transformedGift);
-          
-          // Calculate initial countdown immediately if gift has a future date
-          if (transformedGift.dateTime && !transformedGift.isOpened) {
-            const eventTime = new Date(transformedGift.dateTime).getTime();
-            const unlockTime = eventTime - (24 * 60 * 60 * 1000);
-            const now = new Date().getTime();
-            const initialCountdown = Math.max(0, Math.floor((unlockTime - now) / 1000));
-            setCountdown(initialCountdown);
-            console.log('Initial countdown calculated:', initialCountdown);
-          }
-        } else {
+        // Import createClient dynamically to avoid SSR issues
+        const { createClient } = await import('@/lib/supabase');
+        const supabase = createClient();
+        
+        console.log('Loading gift with ID:', resolvedParams.id);
+        
+        // Fetch gift from database
+        const { data: foundGift, error } = await supabase
+          .from('gifts')
+          .select('*')
+          .eq('id', resolvedParams.id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching gift:', error);
           setError('Gift not found');
+          return;
+        }
+        
+        if (!foundGift) {
+          setError('Gift not found');
+          return;
+        }
+        
+        console.log('Found gift from database:', foundGift);
+        
+        // Transform the database data to match the expected format
+        const transformedGift = {
+          id: foundGift.id,
+          title: foundGift.title,
+          message: foundGift.message,
+          senderName: 'Gift Creator', // Could be fetched from user profile
+          recipientName: foundGift.recipient_name,
+          scheduledFor: foundGift.scheduled_for,
+          isOpened: foundGift.is_opened || false,
+          giftImages: [],
+          qrFiles: [],
+          videoFile: foundGift.video_url,
+          videoUrl: foundGift.video_url,
+          venue: foundGift.reservation_details?.venue,
+          dateTime: foundGift.reservation_details?.dateTime,
+          city: foundGift.reservation_details?.city,
+          createdAt: foundGift.created_at,
+          updatedAt: foundGift.updated_at,
+          reservationDetails: {
+            type: 'experience',
+            venue: foundGift.reservation_details?.venue,
+            date: foundGift.reservation_details?.dateTime,
+            city: foundGift.reservation_details?.city,
+            details: foundGift.title
+          }
+        };
+        
+        console.log('Transformed gift:', transformedGift);
+        setGift(transformedGift);
+        
+        // Calculate initial countdown immediately if gift has a future date
+        if (transformedGift.dateTime && !transformedGift.isOpened) {
+          const eventTime = new Date(transformedGift.dateTime).getTime();
+          const unlockTime = eventTime - (24 * 60 * 60 * 1000);
+          const now = new Date().getTime();
+          const initialCountdown = Math.max(0, Math.floor((unlockTime - now) / 1000));
+          setCountdown(initialCountdown);
+          console.log('Initial countdown calculated:', initialCountdown);
         }
       } catch (err) {
         console.error('Error loading gift:', err);
@@ -167,9 +182,42 @@ export default function GiftPage({ params }: GiftPageProps) {
     // Gift is being unwrapped
     setShowConfetti(true);
     
-    // Track gift opening
+    // Track gift opening in database
     try {
-        setGift((prev) => prev ? { ...prev, isOpened: true } : null);
+      if (gift) {
+        // Import createClient dynamically to avoid SSR issues
+        const { createClient } = await import('@/lib/supabase');
+        const supabase = createClient();
+        
+        // Update gift as opened in database
+        const { error: updateError } = await supabase
+          .from('gifts')
+          .update({ 
+            is_opened: true, 
+            opened_at: new Date().toISOString() 
+          })
+          .eq('id', gift.id);
+        
+        if (updateError) {
+          console.error('Error updating gift in database:', updateError);
+        }
+        
+        // Track the opening event
+        const { error: trackError } = await supabase
+          .from('gift_opens')
+          .insert({
+            gift_id: gift.id,
+            opened_at: new Date().toISOString(),
+            ip_address: null, // Could be added if needed
+            user_agent: navigator.userAgent
+          });
+        
+        if (trackError) {
+          console.error('Error tracking gift open:', trackError);
+        }
+      }
+      
+      setGift((prev) => prev ? { ...prev, isOpened: true } : null);
       toast.success('Gift unwrapped! 🎉');
     } catch (error) {
       console.error('Error tracking gift open:', error);
