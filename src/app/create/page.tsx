@@ -3,14 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Send, ArrowLeft, Mail, Link as LinkIcon } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TextRevealButton } from '@/components/ui/shadcn-io/text-reveal-button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { BentoGrid, BentoCard } from '@/components/BentoGrid';
 import { AnimatedText } from '@/components/AnimatedComponents';
@@ -19,6 +16,7 @@ import { VideoRecorder } from '@/components/VideoRecorder';
 import { toast } from 'sonner';
 import FireworksBackground from '@/components/ui/shadcn-io/fireworks-background';
 import { PostcardPreview } from '@/components/PostcardPreview';
+import { Header } from '@/components/Header';
 import { createClient } from '@/lib/supabase';
 
 // Helper function to convert File to data URL
@@ -467,25 +465,10 @@ export default function CreateGiftPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-amber-50 dark:from-neutral-950 dark:via-neutral-950 dark:to-black">
       {/* Header */}
-      <header className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-3">
-            <Image 
-              src="/unwrap_log.svg" 
-              alt="Unwrap Logo" 
-              width={48}
-              height={48}
-              className="h-12 w-auto"
-            />
-            <TextRevealButton
-              text="Unwrap"
-              revealColor="#FFD700"
-              revealGradient="linear-gradient(90deg, #B347FF, #FFB800, #37FF8B)"
-              className="hidden sm:block"
-            />
-          </Link>
-        </div>
-        
+      <Header />
+      
+      {/* Back Button */}
+      <div className="container mx-auto px-4 py-4">
         <Button 
           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0"
           onClick={() => router.back()}
@@ -493,7 +476,7 @@ export default function CreateGiftPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 relative">
         <div className="absolute inset-0 z-0 pointer-events-none">
