@@ -6,6 +6,7 @@ import { User, LogOut, Camera, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase';
 import { getOptimizedUserData, clearLargeCookies } from '@/lib/session-optimizer';
+import { clearAllSupabaseCookies, clearLargeLocalStorage } from '@/lib/header-optimizer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -57,8 +58,10 @@ export function UserMenu({ className = '' }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
-      // Clear large cookies before signing out
+      // Aggressively clear all session data
       clearLargeCookies();
+      clearAllSupabaseCookies();
+      clearLargeLocalStorage();
       
       const { error } = await supabase.auth.signOut();
       if (error) {

@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { MagicalBackground } from "@/components/MagicalBackground";
+import { HeaderOptimizer } from "@/components/HeaderOptimizer";
+import "@/lib/error-handler";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
+        <HeaderOptimizer />
         <MagicalBackground />
         <div className="relative z-10">
           {children}
