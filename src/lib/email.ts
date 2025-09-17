@@ -1,6 +1,15 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization of Resend client to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  if (!resend && process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 'your_resend_api_key_here') {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
+
 const isDevelopment = !process.env.RESEND_API_KEY || 
   process.env.RESEND_API_KEY === 'your_resend_api_key_here' ||
   process.env.NODE_ENV === 'development';
@@ -44,7 +53,12 @@ export async function sendGiftEmail({
   }
   
   try {
-    const { data, error } = await resend.emails.send({
+    const resendClient = getResendClient();
+    if (!resendClient) {
+      throw new Error('Resend client not configured');
+    }
+    
+    const { data, error } = await resendClient.emails.send({
       from: 'Unwrap <onboarding@resend.dev>',
       to: [to],
       subject: `🎁 You have a gift from ${senderName}!`,
@@ -307,7 +321,12 @@ export async function sendThankYouEmail({
   giftTitle: string;
 }) {
   try {
-    const { data, error } = await resend.emails.send({
+    const resendClient = getResendClient();
+    if (!resendClient) {
+      throw new Error('Resend client not configured');
+    }
+    
+    const { data, error } = await resendClient.emails.send({
       from: 'Unwrap <onboarding@resend.dev>',
       to: [senderEmail],
       subject: `💝 ${recipientName} says thank you!`,
