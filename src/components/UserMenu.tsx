@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, LogOut, Camera, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createClient } from '@/lib/supabase';
-import { getOptimizedUserData, clearLargeCookies } from '@/lib/session-optimizer';
-import { optimizeCookiesForVercel } from '@/lib/vercel-header-optimizer';
+import { getMinimalSession, signOutMinimalAuth } from '@/lib/minimal-auth';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -19,55 +17,38 @@ export function UserMenu({ className = '' }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{
     id: string;
-    email?: string;
-    user_metadata?: {
-      name?: string;
-      avatar_url?: string;
-    };
+    email: string;
+    name?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
+    const getUser = () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error('Error getting user:', error);
+        const session = getMinimalSession();
+        if (session) {
+          setUser(session.user);
         } else {
-          setUser(getOptimizedUserData(user));
+          setUser(null);
         }
       } catch (error) {
         console.error('Error getting user:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ? getOptimizedUserData(session.user) : null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, []);
 
   const handleSignOut = async () => {
     try {
-      // Optimize cookies for Vercel limits
-      optimizeCookiesForVercel();
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast.error('Error signing out');
-      } else {
-        toast.success('Signed out successfully');
-        router.push('/');
-      }
+      await signOutMinimalAuth();
+      setUser(null);
+      toast.success('Signed out successfully');
+      router.push('/');
     } catch (error) {
       toast.error('Error signing out');
     }
@@ -87,7 +68,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
   };
 
   const getUserDisplayName = () => {
-    return user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+    return user?.name || user?.email?.split('@')[0] || 'User';
   };
 
   if (loading) {
@@ -116,17 +97,9 @@ export function UserMenu({ className = '' }: UserMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="relative w-10 h-10 rounded-full p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
       >
-        {user.user_metadata?.avatar_url ? (
-          <img
-            src={user.user_metadata.avatar_url}
-            alt="Profile"
-            className="w-8 h-8 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
-            {getUserInitials(user.user_metadata?.name, user.email)}
-          </div>
-        )}
+        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
+          {getUserInitials(user.name, user.email)}
+        </div>
       </Button>
 
       <AnimatePresence>
@@ -149,17 +122,9 @@ export function UserMenu({ className = '' }: UserMenuProps) {
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-3">
-                  {user.user_metadata?.avatar_url ? (
-                    <img
-                      src={user.user_metadata.avatar_url}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                      {getUserInitials(user.user_metadata?.name, user.email)}
-                    </div>
-                  )}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                    {getUserInitials(user.name, user.email)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {getUserDisplayName()}

@@ -18,6 +18,7 @@ import FireworksBackground from '@/components/ui/shadcn-io/fireworks-background'
 import { PostcardPreview } from '@/components/PostcardPreview';
 import { Header } from '@/components/Header';
 import { createClient } from '@/lib/supabase';
+import { getMinimalSession } from '@/lib/minimal-auth';
 
 // Helper function to convert File to data URL
 const fileToDataURL = (file: File): Promise<string> => {
@@ -61,28 +62,12 @@ export default function CreateGiftPage() {
   ];
 
 
-  // Check authentication status
+  // Check authentication status using minimal auth
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = () => {
       try {
-        // Check authentication status
-        
-        // Check if Supabase is properly configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          console.error('Supabase not configured - redirecting to login');
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return;
-        }
-        
-        const { data: { user }, error } = await supabase.auth.getUser();
-        // Set authentication state based on user presence
-        if (error) {
-          console.error('Auth error:', error);
-          setIsAuthenticated(false);
-        } else {
-          setIsAuthenticated(!!user);
-        }
+        const session = getMinimalSession();
+        setIsAuthenticated(!!session);
       } catch (error) {
         console.error('Auth check failed:', error);
         setIsAuthenticated(false);
@@ -92,17 +77,7 @@ export default function CreateGiftPage() {
     };
 
     checkAuth();
-
-    // Only set up auth listener if Supabase is configured
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        setIsAuthenticated(!!session?.user);
-        setIsLoading(false);
-      });
-
-      return () => subscription.unsubscribe();
-    }
-  }, [supabase.auth]);
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {

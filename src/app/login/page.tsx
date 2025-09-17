@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { createClient } from '@/lib/supabase';
+import { signInWithMinimalAuth, signUpWithMinimalAuth } from '@/lib/minimal-auth';
 import { toast } from 'sonner';
 import FireworksBackground from '@/components/ui/shadcn-io/fireworks-background';
 import { TextRevealButton } from '@/components/ui/shadcn-io/text-reveal-button';
@@ -30,16 +31,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast.error(error.message);
-      } else {
+      const session = await signInWithMinimalAuth(email, password);
+      
+      if (session) {
         toast.success('Welcome back!');
         router.push('/create');
+      } else {
+        toast.error('Invalid credentials');
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
@@ -53,20 +51,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
-      });
-
-      if (error) {
-        toast.error(error.message);
+      const session = await signUpWithMinimalAuth(email, password, name);
+      
+      if (session) {
+        toast.success('Account created! Welcome!');
+        router.push('/create');
       } else {
-        toast.success('Check your email to confirm your account!');
+        toast.error('Failed to create account');
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
