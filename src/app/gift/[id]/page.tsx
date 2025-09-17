@@ -280,16 +280,18 @@ export default function GiftPage({ params }: GiftPageProps) {
                 transition={{ duration: 0.8 }}
                 className="flex justify-center"
               >
-                <PostcardPreview
-                  formData={gift}
-                  giftImages={[]}
-                  qrFiles={[]}
-                  videoFile={gift.videoFile}
-                  message={gift.message}
-                  isLocked={isLocked}
-                  onUnlock={handleUnwrap}
-                  countdown={countdown}
-                />
+                {gift && (
+                  <PostcardPreview
+                    formData={gift}
+                    giftImages={[]}
+                    qrFiles={[]}
+                    videoFile={gift.videoFile}
+                    message={gift.message}
+                    isLocked={isLocked}
+                    onUnlock={handleUnwrap}
+                    countdown={countdown}
+                  />
+                )}
               </motion.div>
             </div>
           )}
