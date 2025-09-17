@@ -18,6 +18,7 @@ export default function GiftPage({ params }: GiftPageProps) {
     title: string;
     message: string;
     videoUrl?: string;
+    videoFile?: File | string | null;
     giftImageUrl?: string;
     qrCodeUrl?: string;
     dateTime?: string;
