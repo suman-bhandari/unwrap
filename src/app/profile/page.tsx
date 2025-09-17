@@ -111,7 +111,16 @@ export default function ProfilePage() {
     return null;
   }
 
-  const getUserInitials = (email: string) => {
+  const getUserInitials = (name?: string, email?: string) => {
+    if (name) {
+      const nameParts = name.trim().split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      } else if (nameParts.length === 1) {
+        return nameParts[0].slice(0, 2).toUpperCase();
+      }
+    }
+    // Fallback to email if no name
     return email?.split('@')[0]?.slice(0, 2).toUpperCase() || 'U';
   };
 
@@ -154,7 +163,7 @@ export default function ProfilePage() {
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl border-4 border-white shadow-lg">
-                      {getUserInitials(user.email || '')}
+                      {getUserInitials(user.user_metadata?.name, user.email)}
                     </div>
                   )}
                 </div>

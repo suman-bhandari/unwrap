@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, LogOut, Edit3, Camera, Shield } from 'lucide-react';
+import { User, LogOut, Camera, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -68,7 +68,16 @@ export function UserMenu({ className = '' }: UserMenuProps) {
     }
   };
 
-  const getUserInitials = (email: string) => {
+  const getUserInitials = (name?: string, email?: string) => {
+    if (name) {
+      const nameParts = name.trim().split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      } else if (nameParts.length === 1) {
+        return nameParts[0].slice(0, 2).toUpperCase();
+      }
+    }
+    // Fallback to email if no name
     return email?.split('@')[0]?.slice(0, 2).toUpperCase() || 'U';
   };
 
@@ -110,7 +119,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
-            {getUserInitials(user.email || '')}
+            {getUserInitials(user.user_metadata?.name, user.email)}
           </div>
         )}
       </Button>
@@ -143,7 +152,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                      {getUserInitials(user.email || '')}
+                      {getUserInitials(user.user_metadata?.name, user.email)}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -173,19 +182,6 @@ export function UserMenu({ className = '' }: UserMenuProps) {
                   </Button>
                 </Link>
 
-                <Link href="/profile/edit">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start px-4 py-2 h-auto text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Edit3 className="w-4 h-4 mr-3" />
-                    <div>
-                      <div className="font-medium">Edit Profile</div>
-                      <div className="text-xs text-gray-500">Update name and details</div>
-                    </div>
-                  </Button>
-                </Link>
 
                 <Link href="/profile/security">
                   <Button

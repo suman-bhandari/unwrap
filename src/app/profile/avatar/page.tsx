@@ -16,6 +16,7 @@ export default function AvatarPage() {
     id: string;
     email?: string;
     user_metadata?: {
+      name?: string;
       avatar_url?: string;
     };
   } | null>(null);
@@ -154,7 +155,16 @@ export default function AvatarPage() {
     return null;
   }
 
-  const getUserInitials = (email?: string) => {
+  const getUserInitials = (name?: string, email?: string) => {
+    if (name) {
+      const nameParts = name.trim().split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      } else if (nameParts.length === 1) {
+        return nameParts[0].slice(0, 2).toUpperCase();
+      }
+    }
+    // Fallback to email if no name
     return email?.split('@')[0]?.slice(0, 2).toUpperCase() || 'U';
   };
 
@@ -210,7 +220,7 @@ export default function AvatarPage() {
                       />
                     ) : (
                       <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-3xl border-4 border-white shadow-lg">
-                        {getUserInitials(user.email || '')}
+                        {getUserInitials(user.user_metadata?.name, user.email)}
                       </div>
                     )}
                     {selectedFile && (
