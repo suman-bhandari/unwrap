@@ -280,9 +280,16 @@ export default function GiftPage({ params }: GiftPageProps) {
                 transition={{ duration: 0.8 }}
                 className="flex justify-center"
               >
-                {gift && (
+                {gift && gift.venue && gift.dateTime && gift.city && (
                   <PostcardPreview
-                    formData={gift}
+                    formData={{
+                      title: gift.title,
+                      recipientName: gift.recipientName,
+                      message: gift.message,
+                      venue: gift.venue,
+                      dateTime: gift.dateTime,
+                      city: gift.city
+                    }}
                     giftImages={[]}
                     qrFiles={[]}
                     videoFile={gift.videoFile}
