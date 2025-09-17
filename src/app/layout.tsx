@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { MagicalBackground } from "@/components/MagicalBackground";
 import { HeaderOptimizer } from "@/components/HeaderOptimizer";
 import "@/lib/error-handler";
-import "@/lib/aggressive-cleaner";
+import "@/lib/vercel-header-optimizer";
 
 const inter = Inter({
   subsets: ["latin"],

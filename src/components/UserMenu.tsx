@@ -6,8 +6,7 @@ import { User, LogOut, Camera, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase';
 import { getOptimizedUserData, clearLargeCookies } from '@/lib/session-optimizer';
-import { clearAllSupabaseCookies, clearLargeLocalStorage } from '@/lib/header-optimizer';
-import { nuclearClean } from '@/lib/aggressive-cleaner';
+import { optimizeCookiesForVercel } from '@/lib/vercel-header-optimizer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -59,8 +58,8 @@ export function UserMenu({ className = '' }: UserMenuProps) {
 
   const handleSignOut = async () => {
     try {
-      // Nuclear clean everything
-      nuclearClean();
+      // Optimize cookies for Vercel limits
+      optimizeCookiesForVercel();
       
       const { error } = await supabase.auth.signOut();
       if (error) {
