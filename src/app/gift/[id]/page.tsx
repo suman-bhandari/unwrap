@@ -69,6 +69,8 @@ export default function GiftPage({ params }: GiftPageProps) {
             venue: foundGift.venue,
             dateTime: foundGift.dateTime,
             city: foundGift.city,
+            createdAt: foundGift.createdAt || new Date().toISOString(),
+            updatedAt: foundGift.updatedAt || new Date().toISOString(),
             reservationDetails: {
               type: 'experience',
               venue: foundGift.venue,
@@ -158,7 +160,7 @@ export default function GiftPage({ params }: GiftPageProps) {
       return;
     }
 
-    setIsUnwrapped(true);
+    // Gift is being unwrapped
     setShowConfetti(true);
     
     // Track gift opening
