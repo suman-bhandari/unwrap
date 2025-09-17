@@ -293,7 +293,7 @@ export default function GiftPage({ params }: GiftPageProps) {
                     }}
                     giftImages={[]}
                     qrFiles={[]}
-                    videoFile={gift.videoFile}
+                    videoFile={gift.videoFile || null}
                     message={gift.message}
                     isLocked={isLocked}
                     onUnlock={handleUnwrap}
