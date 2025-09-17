@@ -20,6 +20,9 @@ export default function GiftPage({ params }: GiftPageProps) {
     videoUrl?: string;
     giftImageUrl?: string;
     qrCodeUrl?: string;
+    dateTime?: string;
+    venue?: string;
+    city?: string;
     reservationDetails?: {
       venue?: string;
       city?: string;
