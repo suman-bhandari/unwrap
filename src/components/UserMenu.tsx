@@ -10,7 +10,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ className = '' }: UserMenuProps) {
-  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; avatar_initials?: string } } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; avatar_initials?: string; avatar_url?: string } } | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
@@ -52,7 +52,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
     }
   };
 
-  const getUserInitials = (user: { user_metadata?: { name?: string; avatar_initials?: string }; email?: string }) => {
+  const getUserInitials = (user: { user_metadata?: { name?: string; avatar_initials?: string; avatar_url?: string }; email?: string }) => {
     // First try to get initials from user metadata
     if (user?.user_metadata?.avatar_initials) {
       return user.user_metadata.avatar_initials;
@@ -71,6 +71,10 @@ export function UserMenu({ className = '' }: UserMenuProps) {
     }
     
     return 'U';
+  };
+
+  const hasAvatar = (user: { user_metadata?: { avatar_url?: string } }) => {
+    return user?.user_metadata?.avatar_url && user.user_metadata.avatar_url.trim() !== '';
   };
 
   if (isLoading) {
@@ -99,9 +103,17 @@ export function UserMenu({ className = '' }: UserMenuProps) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >
-        <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
-          {getUserInitials(user)}
-        </div>
+        {hasAvatar(user) ? (
+          <img 
+            src={user.user_metadata?.avatar_url} 
+            alt="Profile" 
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+            {getUserInitials(user)}
+          </div>
+        )}
         <span className="hidden sm:block">{user.user_metadata?.name || user.email?.split('@')[0] || 'User'}</span>
         <User className="w-4 h-4" />
       </button>
