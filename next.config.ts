@@ -5,11 +5,34 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion', 'lucide-react'],
   },
-  // Enable static optimization
-  output: 'standalone',
+  // Remove standalone output for development to prevent header issues
+  // output: 'standalone', // Commented out for development
   // Optimize images
   images: {
     formats: ['image/webp', 'image/avif'],
+  },
+  // Disable all experimental features that might cause header issues
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+    // Disable any features that might cause large headers
+    serverComponentsExternalPackages: [],
+  },
+  // Add webpack configuration to handle large headers
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Increase server-side header limits
+      config.externals = [...(config.externals || []), 'node:http'];
+    }
+    return config;
+  },
+  // Add server configuration
+  serverRuntimeConfig: {
+    // Increase header size limits
+    maxHeaderSize: 32768, // 32KB
+  },
+  // Add public runtime config
+  publicRuntimeConfig: {
+    // Disable any features that might cause large headers
   },
 };
 

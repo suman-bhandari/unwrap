@@ -53,8 +53,10 @@ export default function GiftPage({ params }: GiftPageProps) {
         const supabase = createClient();
         
         console.log('Loading gift with ID:', resolvedParams.id);
+        console.log('Using Supabase client for public gift access');
         
         // Fetch gift from database
+        console.log('Attempting to fetch gift from database...');
         const { data: foundGift, error } = await supabase
           .from('gifts')
           .select('*')
@@ -63,12 +65,19 @@ export default function GiftPage({ params }: GiftPageProps) {
         
         if (error) {
           console.error('Error fetching gift:', error);
-          setError('Gift not found');
+          console.error('Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          setError(`Gift not found: ${error.message}`);
           return;
         }
         
         if (!foundGift) {
-          setError('Gift not found');
+          console.log('No gift found with ID:', resolvedParams.id);
+          setError(`Gift not found with ID: ${resolvedParams.id}`);
           return;
         }
         

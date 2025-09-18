@@ -12,6 +12,7 @@ interface PostcardPreviewProps {
     dateTime: string;
     city: string;
   };
+  senderName?: string;
   giftImages: File[];
   qrFiles: File[];
   videoFile: File | string | null;
@@ -23,6 +24,7 @@ interface PostcardPreviewProps {
 
 export function PostcardPreview({ 
   formData, 
+  senderName = 'User',
   giftImages, 
   qrFiles, 
   videoFile, 
@@ -68,7 +70,7 @@ export function PostcardPreview({
             {formData.title}
           </h2>
           <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600 dark:text-gray-300">From: You</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">From: {senderName}</p>
             <p className="text-sm text-gray-600 dark:text-gray-300">To: {formData.recipientName}</p>
           </div>
         </div>

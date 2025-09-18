@@ -85,58 +85,191 @@ export function clearMinimalSession(): void {
   localStorage.removeItem(SESSION_KEY)
 }
 
-export async function signInWithMinimalAuth(email: string, password: string): Promise<MinimalSession | null> {
-  const supabase = createClient()
+export function updateMinimalSession(updates: Partial<MinimalUser>): boolean {
+  if (typeof window === 'undefined') return false
   
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-
-    if (error || !data.user) {
-      console.error('Sign in error:', error)
-      return null
+    const currentSession = getMinimalSession()
+    if (!currentSession) return false
+    
+    const updatedSession: MinimalSession = {
+      ...currentSession,
+      user: {
+        ...currentSession.user,
+        ...updates
+      }
     }
-
-    const minimalSession = createMinimalSession(data.user)
-    if (minimalSession) {
-      setMinimalSession(minimalSession)
-    }
-
-    return minimalSession
+    
+    setMinimalSession(updatedSession)
+    return true
   } catch (error) {
-    console.error('Sign in failed:', error)
-    return null
+    console.error('Failed to update minimal session:', error)
+    return false
+  }
+}
+
+export async function signInWithMinimalAuth(email: string, password: string): Promise<MinimalSession | null> {
+  // Check if Supabase is properly configured
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Supabase environment variables are missing!');
+    console.error('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file');
+    return null;
+  }
+
+  try {
+    // Clear ALL cookies before attempting authentication to prevent 431 error
+    if (typeof window !== 'undefined') {
+      console.log('Clearing all cookies before authentication...');
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
+      
+      // Clear localStorage and sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+
+    // Create a fresh Supabase client with minimal configuration
+    const supabase = createClient();
+    
+    console.log('Attempting Supabase sign in with clean state...');
+    
+    // Use a more direct approach to avoid large headers
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Authentication failed:', response.status, errorData);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (!data.user) {
+      console.error('No user in response');
+      return null;
+    }
+
+    console.log('Authentication successful, creating minimal session...');
+    
+    // Create a very minimal session
+    const minimalSession: MinimalSession = {
+      user: {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || ''
+      },
+      access_token: data.access_token || '',
+      expires_at: Date.now() + (3600 * 1000) // 1 hour
+    };
+
+    // Store in localStorage (not cookies to avoid header issues)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(minimalSession));
+        console.log('Minimal session stored in localStorage');
+      } catch (error) {
+        console.warn('Failed to store session:', error);
+      }
+    }
+
+    return minimalSession;
+  } catch (error) {
+    console.error('Sign in failed with exception:', error);
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    return null;
   }
 }
 
 export async function signUpWithMinimalAuth(email: string, password: string, name: string): Promise<MinimalSession | null> {
-  const supabase = createClient()
-  
+  // Check if Supabase is properly configured
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Supabase environment variables are missing!');
+    return null;
+  }
+
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
+    // Clear ALL cookies before attempting sign up to prevent 431 error
+    if (typeof window !== 'undefined') {
+      console.log('Clearing all cookies before sign up...');
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
+      
+      // Clear localStorage and sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+
+    console.log('Attempting Supabase sign up with clean state...');
+    
+    // Use a more direct approach to avoid large headers
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+      },
+      body: JSON.stringify({
+        email,
+        password,
         data: { name }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Sign up failed:', response.status, errorData);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (!data.user) {
+      console.error('No user in sign up response');
+      return null;
+    }
+
+    console.log('Sign up successful, creating minimal session...');
+    
+    // Create a very minimal session
+    const minimalSession: MinimalSession = {
+      user: {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || name
+      },
+      access_token: data.access_token || '',
+      expires_at: Date.now() + (3600 * 1000) // 1 hour
+    };
+
+    // Store in localStorage (not cookies to avoid header issues)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(minimalSession));
+        console.log('Minimal session stored in localStorage');
+      } catch (error) {
+        console.warn('Failed to store session:', error);
       }
-    })
-
-    if (error || !data.user) {
-      console.error('Sign up error:', error)
-      return null
     }
 
-    const minimalSession = createMinimalSession(data.user)
-    if (minimalSession) {
-      setMinimalSession(minimalSession)
-    }
-
-    return minimalSession
+    return minimalSession;
   } catch (error) {
-    console.error('Sign up failed:', error)
-    return null
+    console.error('Sign up failed with exception:', error);
+    return null;
   }
 }
 

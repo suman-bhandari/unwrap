@@ -1,12 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, LogOut, Camera, Shield } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { getMinimalSession, signOutMinimalAuth } from '@/lib/minimal-auth';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase';
+import { User, Settings, LogOut, Mail, Lock, UserCircle, History } from 'lucide-react';
 import Link from 'next/link';
 
 interface UserMenuProps {
@@ -14,64 +10,70 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ className = '' }: UserMenuProps) {
+  const [user, setUser] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<{
-    id: string;
-    email: string;
-    name?: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
-    const getUser = () => {
+    const getUser = async () => {
       try {
-        const session = getMinimalSession();
-        if (session) {
-          setUser(session.user);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Error getting user:', error);
         } else {
-          setUser(null);
+          setUser(user);
         }
       } catch (error) {
         console.error('Error getting user:', error);
-        setUser(null);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     getUser();
-  }, []);
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        setUser(session?.user || null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
 
   const handleSignOut = async () => {
     try {
-      await signOutMinimalAuth();
-      setUser(null);
-      toast.success('Signed out successfully');
-      router.push('/');
+      await supabase.auth.signOut();
+      window.location.href = '/login';
     } catch (error) {
-      toast.error('Error signing out');
+      console.error('Error signing out:', error);
     }
   };
 
-  const getUserInitials = (name?: string, email?: string) => {
-    if (name) {
-      const nameParts = name.trim().split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-      } else if (nameParts.length === 1) {
-        return nameParts[0].slice(0, 2).toUpperCase();
-      }
+  const getUserInitials = (user: any) => {
+    // First try to get initials from user metadata
+    if (user?.user_metadata?.avatar_initials) {
+      return user.user_metadata.avatar_initials;
     }
-    // Fallback to email if no name
-    return email?.split('@')[0]?.slice(0, 2).toUpperCase() || 'U';
+    
+    // Fallback to name initials
+    if (user?.user_metadata?.name) {
+      const name = user.user_metadata.name;
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    
+    // Fallback to email initials
+    if (user?.email) {
+      const name = user.email.split('@')[0];
+      return name.charAt(0).toUpperCase();
+    }
+    
+    return 'U';
   };
 
-  const getUserDisplayName = () => {
-    return user?.name || user?.email?.split('@')[0] || 'User';
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className={`animate-pulse ${className}`}>
         <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
@@ -81,127 +83,95 @@ export function UserMenu({ className = '' }: UserMenuProps) {
 
   if (!user) {
     return (
-      <Link href="/login">
-        <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0">
-          Sign In
-        </Button>
+      <Link 
+        href="/login"
+        className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 ${className}`}
+      >
+        <User className="w-4 h-4" />
+        Sign In
       </Link>
     );
   }
 
   return (
     <div className={`relative ${className}`}>
-      <Button
-        variant="ghost"
-        size="sm"
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-10 h-10 rounded-full p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
-          {getUserInitials(user.name, user.email)}
+        <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+          {getUserInitials(user)}
         </div>
-      </Button>
+        <span className="hidden sm:block">{user.user_metadata?.name || user.email?.split('@')[0] || 'User'}</span>
+        <User className="w-4 h-4" />
+      </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
-            
-            {/* Dropdown Menu */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="absolute right-0 top-12 z-50 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2"
-            >
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 z-20 mt-2 w-64 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+            <div className="py-1">
               {/* User Info */}
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                    {getUserInitials(user.name, user.email)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {getUserDisplayName()}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
+              <div className="px-4 py-3 border-b border-gray-100">
+                <p className="text-sm font-medium text-gray-900">
+                  {user.user_metadata?.name || 'User'}
+                </p>
+                <p className="text-sm text-gray-500">{user.email}</p>
               </div>
 
               {/* Menu Items */}
-              <div className="py-2">
-                <Link href="/profile">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start px-4 py-2 h-auto text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <User className="w-4 h-4 mr-3" />
-                    <div>
-                      <div className="font-medium">View Profile</div>
-                      <div className="text-xs text-gray-500">Manage your account</div>
-                    </div>
-                  </Button>
-                </Link>
+              <Link
+                href="/profile"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <UserCircle className="w-4 h-4 mr-3" />
+                View Profile
+              </Link>
 
+              <Link
+                href="/profile/security"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <Lock className="w-4 h-4 mr-3" />
+                Change Password
+              </Link>
 
-                <Link href="/profile/security">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start px-4 py-2 h-auto text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Shield className="w-4 h-4 mr-3" />
-                    <div>
-                      <div className="font-medium">Security</div>
-                      <div className="text-xs text-gray-500">Change password</div>
-                    </div>
-                  </Button>
-                </Link>
+              <Link
+                href="/profile/avatar"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <Settings className="w-4 h-4 mr-3" />
+                Profile Picture
+              </Link>
 
-                <Link href="/profile/avatar">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start px-4 py-2 h-auto text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Camera className="w-4 h-4 mr-3" />
-                    <div>
-                      <div className="font-medium">Profile Picture</div>
-                      <div className="text-xs text-gray-500">Upload or change photo</div>
-                    </div>
-                  </Button>
-                </Link>
+              <Link
+                href="/memories"
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <History className="w-4 h-4 mr-3" />
+                Past Memories
+              </Link>
 
-                <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
-
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start px-4 py-2 h-auto text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleSignOut();
-                  }}
+              <div className="border-t border-gray-100">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <LogOut className="w-4 h-4 mr-3" />
-                  <div>
-                    <div className="font-medium">Sign Out</div>
-                    <div className="text-xs text-red-500">End your session</div>
-                  </div>
-                </Button>
+                  Sign Out
+                </button>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

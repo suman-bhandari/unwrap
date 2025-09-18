@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Send, ArrowLeft, Mail, Link as LinkIcon } from 'lucide-react';
+import { Calendar, Send, ArrowLeft, Mail, Link as LinkIcon, History } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,6 @@ import FireworksBackground from '@/components/ui/shadcn-io/fireworks-background'
 import { PostcardPreview } from '@/components/PostcardPreview';
 import { Header } from '@/components/Header';
 import { createClient } from '@/lib/supabase';
-import { getMinimalSession } from '@/lib/minimal-auth';
 
 // Helper function to convert File to data URL
 const fileToDataURL = (file: File): Promise<string> => {
@@ -52,6 +51,7 @@ export default function CreateGiftPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'link'>('email');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -62,22 +62,30 @@ export default function CreateGiftPage() {
   ];
 
 
-  // Check authentication status using minimal auth
+  // Check authentication status
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
-        const session = getMinimalSession();
-        setIsAuthenticated(!!session);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Auth error:', error);
+          setIsAuthenticated(false);
+          setUser(null);
+        } else {
+          setIsAuthenticated(!!user);
+          setUser(user);
+        }
       } catch (error) {
         console.error('Auth check failed:', error);
         setIsAuthenticated(false);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [supabase.auth]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -119,10 +127,13 @@ export default function CreateGiftPage() {
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
+        console.error('User authentication error:', userError);
         toast.error('Please sign in to create a gift');
         setIsGeneratingLink(false);
         return;
       }
+
+      console.log('User authenticated for gift creation:', user.id);
 
       // Convert video file to data URL if it exists
       const videoDataURL = videoFile ? await fileToDataURL(videoFile) : null;
@@ -130,12 +141,13 @@ export default function CreateGiftPage() {
       // Prepare gift data for database storage
       const giftData = {
         sender_id: user.id,
+        sender_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         recipient_email: formData.recipientEmail,
         recipient_name: formData.recipientName,
         title: formData.title,
         message: formData.message,
         video_url: videoDataURL,
-        scheduled_for: formData.scheduledFor ? new Date(formData.scheduledFor).toISOString() : null,
+        scheduled_for: formData.scheduledFor ? new Date(formData.scheduledFor).toISOString() : new Date(formData.dateTime).toISOString(),
         reservation_details: {
           venue: formData.venue,
           dateTime: formData.dateTime,
@@ -147,6 +159,9 @@ export default function CreateGiftPage() {
       console.log('Saving gift to database:', giftData);
 
       // Save to database
+      console.log('Attempting to save gift to database...');
+      console.log('Gift data being saved:', giftData);
+      
       const { data: savedGift, error: saveError } = await supabase
         .from('gifts')
         .insert(giftData)
@@ -154,11 +169,19 @@ export default function CreateGiftPage() {
         .single();
 
       if (saveError) {
-        console.error('Error saving gift:', saveError);
-        toast.error('Failed to save gift to database');
+        console.error('Database save error:', saveError);
+        console.error('Error details:', {
+          message: saveError.message,
+          details: saveError.details,
+          hint: saveError.hint,
+          code: saveError.code
+        });
+        toast.error(`Failed to save gift: ${saveError.message}`);
         setIsGeneratingLink(false);
         return;
       }
+
+      console.log('Gift saved successfully:', savedGift);
 
       const link = `${window.location.origin}/gift/${savedGift.id}`;
       console.log('Generated link:', link);
@@ -367,7 +390,7 @@ export default function CreateGiftPage() {
         videoFile: videoDataURL,
         totalFiles: giftImages.length + qrFiles.length + (videoFile ? 1 : 0),
         isOpened: false,
-        scheduledFor: formData.scheduledFor || new Date().toISOString(),
+        scheduledFor: formData.scheduledFor || formData.dateTime || new Date().toISOString(),
         createdAt: new Date().toISOString()
       };
       
@@ -442,15 +465,26 @@ export default function CreateGiftPage() {
       {/* Header */}
       <Header />
       
-      {/* Back Button */}
+      {/* Back Button and Past Memories */}
       <div className="container mx-auto px-4 py-4">
-        <Button 
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button 
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          
+          <Button 
+            variant="outline"
+            className="bg-white/80 hover:bg-white text-gray-700 font-semibold shadow-lg border-gray-300"
+            onClick={() => router.push('/memories')}
+          >
+            <History className="w-4 h-4 mr-2" />
+            Past Memories
+          </Button>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 relative">
@@ -766,7 +800,8 @@ export default function CreateGiftPage() {
                             className={`h-20 flex flex-col gap-2 ${deliveryOption === 'now' ? 'bg-gradient-to-r from-emerald-500 to-blue-600 text-white' : ''}`}
                             onClick={() => {
                               setDeliveryOption('now');
-                              setFormData({ ...formData, scheduledFor: '' });
+                              // Set scheduled_for to the experience date/time for "Send Now"
+                              setFormData({ ...formData, scheduledFor: formData.dateTime || '' });
                             }}
                           >
                             <Send className="w-6 h-6" />
@@ -948,6 +983,7 @@ export default function CreateGiftPage() {
                 <AnimatedText delay={1.2}>
                   <PostcardPreview
                     formData={formData}
+                    senderName={user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
                     giftImages={giftImages}
                     qrFiles={qrFiles}
                     videoFile={videoFile}

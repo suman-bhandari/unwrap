@@ -1,37 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase';
+// Removed minimal auth import - using Supabase auth
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Mail, Calendar, Camera, Shield } from 'lucide-react';
-import Link from 'next/link';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createClient } from '@/lib/supabase';
-import { getOptimizedUserData } from '@/lib/session-optimizer';
+import { User, Mail, Calendar, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<{
-    id: string;
-    email?: string;
-    created_at?: string;
-    updated_at?: string;
-    user_metadata?: {
-      name?: string;
-      avatar_url?: string;
-    };
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: ''
   });
-  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -41,69 +30,83 @@ export default function ProfilePage() {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error) {
           console.error('Error getting user:', error);
-          router.push('/login');
-        } else if (!user) {
-          router.push('/login');
-        } else {
-          const optimizedUser = getOptimizedUserData(user);
-          setUser(optimizedUser);
-          setFormData({
-            name: optimizedUser.user_metadata?.name || '',
-            email: optimizedUser.email || '',
-          });
+          router.replace('/login');
+          return;
         }
+        
+        if (!user) {
+          router.replace('/login');
+          return;
+        }
+
+        console.log('Profile page: Found user:', user);
+        setUser(user);
+        setFormData({
+          name: user.user_metadata?.name || '',
+          email: user.email || ''
+        });
       } catch (error) {
         console.error('Error getting user:', error);
-        router.push('/login');
+        router.replace('/login');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     getUser();
-  }, [supabase.auth, router]);
+  }, [router, supabase.auth]);
 
   const handleSave = async () => {
     if (!user) return;
 
     setIsSaving(true);
     try {
+      // Get initials for the new name
+      const initials = formData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      
+      // Update user with minimal metadata (remove large fields)
       const { error } = await supabase.auth.updateUser({
         data: {
           name: formData.name,
+          avatar_initials: initials,
+          // Remove potentially large fields
+          avatar_url: null,
+          picture: null,
+          full_name: null,
+          preferred_username: null
         }
       });
 
       if (error) {
-        toast.error('Error updating profile');
-      } else {
-        toast.success('Profile updated successfully');
-        setIsEditing(false);
-        // Refresh user data
-        const { data: { user: updatedUser } } = await supabase.auth.getUser();
-        setUser(updatedUser);
+        throw error;
       }
+
+      // Update local state
+      setUser(prev => prev ? { 
+        ...prev, 
+        user_metadata: {
+          ...prev.user_metadata,
+          name: formData.name,
+          avatar_initials: initials
+        }
+      } : null);
+      
+      toast.success('Profile updated successfully!');
+      console.log('Profile updated with initials instead of avatar URL');
     } catch (error) {
-      toast.error('Error updating profile');
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    setFormData({
-      name: user?.user_metadata?.name || '',
-      email: user?.email || '',
-    });
-    setIsEditing(false);
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-950 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-amber-50">
+        <Header />
+        <div className="pt-28 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
       </div>
     );
@@ -113,63 +116,23 @@ export default function ProfilePage() {
     return null;
   }
 
-  const getUserInitials = (name?: string, email?: string) => {
-    if (name) {
-      const nameParts = name.trim().split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-      } else if (nameParts.length === 1) {
-        return nameParts[0].slice(0, 2).toUpperCase();
-      }
-    }
-    // Fallback to email if no name
-    return email?.split('@')[0]?.slice(0, 2).toUpperCase() || 'U';
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-950">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/90 border-b border-emerald-200/30">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Home</span>
-              </motion.div>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="pt-24 px-4 pb-8">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-amber-50">
+      <Header />
+      
+      <div className="pt-28 px-4 py-8">
         <div className="container mx-auto max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="border-0 backdrop-blur-sm bg-white/90 shadow-2xl">
-              <CardHeader className="text-center">
-                <div className="flex justify-center mb-4">
-                  {user.user_metadata?.avatar_url ? (
-                    <img
-                      src={user.user_metadata.avatar_url}
-                      alt="Profile"
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl border-4 border-white shadow-lg">
-                      {getUserInitials(user.user_metadata?.name, user.email)}
-                    </div>
-                  )}
-                </div>
-                <CardTitle className="text-2xl">Profile</CardTitle>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Profile Settings
+                </CardTitle>
                 <CardDescription>
                   Manage your account information and preferences
                 </CardDescription>
@@ -177,109 +140,47 @@ export default function ProfilePage() {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Name
-                    </Label>
-                    {isEditing ? (
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Enter your name"
-                      />
-                    ) : (
-                      <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                        {user.user_metadata?.name || 'Not set'}
-                      </div>
-                    )}
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Enter your full name"
+                    />
                   </div>
-
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email
-                    </Label>
-                    <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-500">
-                      {user.email}
-                    </div>
-                    <p className="text-xs text-gray-500">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-sm text-gray-500">
                       Email cannot be changed. Contact support if needed.
                     </p>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Member Since
-                    </Label>
-                    <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      }) : 'Unknown'}
-                    </div>
-                  </div>
                 </div>
 
-                <div className="flex gap-3 pt-4">
-                  {isEditing ? (
-                    <>
-                      <Button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0"
-                      >
-                        {isSaving ? (
-                          <>
-                            <LoadingSpinner size="sm" className="mr-2" />
-                            Saving...
-                          </>
-                        ) : (
-                          'Save Changes'
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleCancel}
-                        disabled={isSaving}
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      onClick={() => setIsEditing(true)}
-                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg border-0"
-                    >
-                      Edit Profile
-                    </Button>
-                  )}
-                </div>
-
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Link href="/profile/security">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                      >
-                        <Shield className="w-4 h-4 mr-2" />
-                        Security
-                      </Button>
-                    </Link>
-                    <Link href="/profile/avatar">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                      >
-                        <Camera className="w-4 h-4 mr-2" />
-                        Avatar
-                      </Button>
-                    </Link>
-                  </div>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => router.back()}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               </CardContent>
             </Card>
