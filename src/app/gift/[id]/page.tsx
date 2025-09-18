@@ -297,31 +297,39 @@ export default function GiftPage({ params }: GiftPageProps) {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 border border-blue-200 dark:border-gray-700"
+                  className="text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-4 sm:p-8 border border-blue-200 dark:border-gray-700 mx-2 sm:mx-0"
                 >
                   <div className="space-y-4">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                    <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white px-2">
                       🎊 Ready to Unwrap In
                     </h2>
-                    <div className="flex justify-center space-x-4 text-3xl font-mono font-bold text-blue-600 dark:text-blue-400">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-4 py-2 shadow-lg">
-                        {Math.floor(countdown / 86400).toString().padStart(2, '0')}
-                        <div className="text-sm font-normal text-gray-500">Days</div>
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                        <div className="text-center">
+                          {Math.floor(countdown / 86400).toString().padStart(2, '0')}
+                          <div className="text-xs sm:text-sm font-normal text-gray-500">Days</div>
+                        </div>
                       </div>
-                      <div className="text-blue-600 dark:text-blue-400 flex items-center">:</div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-4 py-2 shadow-lg">
-                        {Math.floor((countdown % 86400) / 3600).toString().padStart(2, '0')}
-                        <div className="text-sm font-normal text-gray-500">Hours</div>
+                      <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                        <div className="text-center">
+                          {Math.floor((countdown % 86400) / 3600).toString().padStart(2, '0')}
+                          <div className="text-xs sm:text-sm font-normal text-gray-500">Hours</div>
+                        </div>
                       </div>
-                      <div className="text-blue-600 dark:text-blue-400 flex items-center">:</div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-4 py-2 shadow-lg">
-                        {Math.floor((countdown % 3600) / 60).toString().padStart(2, '0')}
-                        <div className="text-sm font-normal text-gray-500">Minutes</div>
+                      <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                        <div className="text-center">
+                          {Math.floor((countdown % 3600) / 60).toString().padStart(2, '0')}
+                          <div className="text-xs sm:text-sm font-normal text-gray-500">Minutes</div>
+                        </div>
                       </div>
-                      <div className="text-blue-600 dark:text-blue-400 flex items-center">:</div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-4 py-2 shadow-lg">
-                        {(countdown % 60).toString().padStart(2, '0')}
-                        <div className="text-sm font-normal text-gray-500">Seconds</div>
+                      <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                        <div className="text-center">
+                          {(countdown % 60).toString().padStart(2, '0')}
+                          <div className="text-xs sm:text-sm font-normal text-gray-500">Seconds</div>
+                        </div>
                       </div>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
