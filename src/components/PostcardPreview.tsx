@@ -167,7 +167,9 @@ export function PostcardPreview({
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex items-center justify-center">
             <div className="text-center text-white p-6">
               <Lock className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
-              <h3 className="text-xl font-bold mb-4">Memory Awaits</h3>
+              <h3 className="text-xl font-bold mb-4">
+                Memory Ready to <span className="bg-gradient-to-r from-[#B347FF] via-[#FFB800] to-[#37FF8B] bg-clip-text text-transparent font-semibold">Unwrap</span> In
+              </h3>
               <p className="text-sm mb-4">Some moments are worth waiting for the stars to align.</p>
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div className="bg-white/20 rounded-lg p-2">
