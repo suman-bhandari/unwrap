@@ -88,7 +88,7 @@ export default function GiftPage({ params }: GiftPageProps) {
           id: foundGift.id,
           title: foundGift.title,
           message: foundGift.message,
-          senderName: 'Gift Creator', // Could be fetched from user profile
+          senderName: foundGift.sender_name, // Use actual sender name from database
           recipientName: foundGift.recipient_name,
           scheduledFor: foundGift.scheduled_for,
           isOpened: foundGift.is_opened || false,
@@ -299,42 +299,64 @@ export default function GiftPage({ params }: GiftPageProps) {
                   transition={{ duration: 0.5 }}
                   className="text-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-4 sm:p-8 border border-blue-200 dark:border-gray-700 mx-2 sm:mx-0"
                 >
-                  <div className="space-y-4">
-                    <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white px-2">
-                      🎊 Ready to Unwrap In
-                    </h2>
-                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
-                        <div className="text-center">
-                          {Math.floor(countdown / 86400).toString().padStart(2, '0')}
-                          <div className="text-xs sm:text-sm font-normal text-gray-500">Days</div>
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <h2 className="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                        🎊 Ready to Unwrap In 🎊
+                      </h2>
+                      <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 mb-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                          <div className="text-center">
+                            {Math.floor(countdown / 86400).toString().padStart(2, '0')}
+                            <div className="text-xs sm:text-sm font-normal text-gray-500">Days</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
-                        <div className="text-center">
-                          {Math.floor((countdown % 86400) / 3600).toString().padStart(2, '0')}
-                          <div className="text-xs sm:text-sm font-normal text-gray-500">Hours</div>
+                        <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                          <div className="text-center">
+                            {Math.floor((countdown % 86400) / 3600).toString().padStart(2, '0')}
+                            <div className="text-xs sm:text-sm font-normal text-gray-500">Hours</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
-                        <div className="text-center">
-                          {Math.floor((countdown % 3600) / 60).toString().padStart(2, '0')}
-                          <div className="text-xs sm:text-sm font-normal text-gray-500">Minutes</div>
+                        <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                          <div className="text-center">
+                            {Math.floor((countdown % 3600) / 60).toString().padStart(2, '0')}
+                            <div className="text-xs sm:text-sm font-normal text-gray-500">Minutes</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
-                        <div className="text-center">
-                          {(countdown % 60).toString().padStart(2, '0')}
-                          <div className="text-xs sm:text-sm font-normal text-gray-500">Seconds</div>
+                        <div className="text-blue-600 dark:text-blue-400 flex items-center text-lg sm:text-3xl">:</div>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg px-2 sm:px-4 py-2 shadow-lg min-w-0 flex-shrink-0">
+                          <div className="text-center">
+                            {(countdown % 60).toString().padStart(2, '0')}
+                            <div className="text-xs sm:text-sm font-normal text-gray-500">Seconds</div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <strong>This gift unlocks 24 hours before the event.</strong>
-                    </p>
+                    
+                    <div className="bg-white/80 dark:bg-gray-800/80 rounded-lg p-6 text-left">
+                      <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                        Dear {gift?.recipientName?.split(' ')[0] || 'Friend'},
+                      </p>
+                      <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mt-3">
+                        {gift?.senderName?.split(' ')[0] || 'Someone'} has something magical planned for{' '}
+                        {gift?.dateTime ? new Date(gift.dateTime).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'your special day'}. ✨
+                      </p>
+                      <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mt-3">
+                        Return when the stars align—24 hours before—to unwrap your surprise.
+                      </p>
+                      <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
+                        Unwrap Team
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
               )}

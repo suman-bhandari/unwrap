@@ -169,21 +169,21 @@ export function PostcardPreview({
               <Lock className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
               <h3 className="text-xl font-bold mb-4">Memory Awaits</h3>
               <p className="text-sm mb-4">Some moments are worth waiting for the stars to align.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                <div className="bg-white/20 rounded-lg p-2 min-w-0">
-                  <div className="text-lg sm:text-2xl font-bold">{Math.floor(countdown / 86400)}</div>
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="bg-white/20 rounded-lg p-2">
+                  <div className="text-2xl font-bold">{Math.floor(countdown / 86400)}</div>
                   <div className="text-xs">Days</div>
                 </div>
-                <div className="bg-white/20 rounded-lg p-2 min-w-0">
-                  <div className="text-lg sm:text-2xl font-bold">{Math.floor((countdown % 86400) / 3600)}</div>
+                <div className="bg-white/20 rounded-lg p-2">
+                  <div className="text-2xl font-bold">{Math.floor((countdown % 86400) / 3600)}</div>
                   <div className="text-xs">Hours</div>
                 </div>
-                <div className="bg-white/20 rounded-lg p-2 min-w-0">
-                  <div className="text-lg sm:text-2xl font-bold">{Math.floor((countdown % 3600) / 60)}</div>
+                <div className="bg-white/20 rounded-lg p-2">
+                  <div className="text-2xl font-bold">{Math.floor((countdown % 3600) / 60)}</div>
                   <div className="text-xs">Minutes</div>
                 </div>
-                <div className="bg-white/20 rounded-lg p-2 min-w-0">
-                  <div className="text-lg sm:text-2xl font-bold">{countdown % 60}</div>
+                <div className="bg-white/20 rounded-lg p-2">
+                  <div className="text-2xl font-bold">{countdown % 60}</div>
                   <div className="text-xs">Seconds</div>
                 </div>
               </div>
