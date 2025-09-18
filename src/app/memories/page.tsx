@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, User, MapPin, Clock, Eye, EyeOff, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Calendar, User, MapPin, Clock, Eye, EyeOff, ExternalLink, ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,9 @@ export default function MemoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string } } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [editingGift, setEditingGift] = useState<PastGift | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -125,6 +128,68 @@ export default function MemoriesPage() {
 
   const openGift = (giftId: string) => {
     window.open(`/gift/${giftId}`, '_blank');
+  };
+
+  const handleEdit = (gift: PastGift) => {
+    setEditingGift(gift);
+  };
+
+  const handleDelete = async (giftId: string) => {
+    try {
+      setIsDeleting(true);
+      const { error } = await supabase
+        .from('gifts')
+        .delete()
+        .eq('id', giftId);
+
+      if (error) {
+        console.error('Error deleting gift:', error);
+        setError('Failed to delete memory');
+        return;
+      }
+
+      // Remove from local state
+      setGifts(prev => prev.filter(gift => gift.id !== giftId));
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleUpdateGift = async (updatedGift: Partial<PastGift>) => {
+    if (!editingGift) return;
+
+    try {
+      const { error } = await supabase
+        .from('gifts')
+        .update({
+          title: updatedGift.title,
+          message: updatedGift.message,
+          recipient_name: updatedGift.recipient_name,
+          reservation_details: updatedGift.reservation_details
+        })
+        .eq('id', editingGift.id);
+
+      if (error) {
+        console.error('Error updating gift:', error);
+        setError('Failed to update memory');
+        return;
+      }
+
+      // Update local state
+      setGifts(prev => prev.map(gift => 
+        gift.id === editingGift.id 
+          ? { ...gift, ...updatedGift }
+          : gift
+      ));
+      setEditingGift(null);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
+    }
   };
 
   // Show loading spinner while checking authentication
@@ -284,6 +349,22 @@ export default function MemoriesPage() {
                           <ExternalLink className="w-4 h-4" />
                           View Gift
                         </Button>
+                        <Button
+                          onClick={() => handleEdit(gift)}
+                          variant="outline"
+                          className="flex items-center gap-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => setShowDeleteConfirm(gift.id)}
+                          variant="outline"
+                          className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -293,6 +374,128 @@ export default function MemoriesPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingGift && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">Edit Memory</h3>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              handleUpdateGift({
+                title: formData.get('title') as string,
+                message: formData.get('message') as string,
+                recipient_name: formData.get('recipient_name') as string,
+                reservation_details: {
+                  ...editingGift.reservation_details,
+                  venue: formData.get('venue') as string,
+                  city: formData.get('city') as string,
+                  dateTime: formData.get('dateTime') as string,
+                }
+              });
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Title</label>
+                  <input
+                    name="title"
+                    defaultValue={editingGift.title}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Recipient Name</label>
+                  <input
+                    name="recipient_name"
+                    defaultValue={editingGift.recipient_name}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Message</label>
+                  <textarea
+                    name="message"
+                    defaultValue={editingGift.message}
+                    className="w-full p-2 border rounded-md h-24"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Venue</label>
+                  <input
+                    name="venue"
+                    defaultValue={editingGift.reservation_details?.venue || ''}
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">City</label>
+                  <input
+                    name="city"
+                    defaultValue={editingGift.reservation_details?.city || ''}
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Date & Time</label>
+                  <input
+                    name="dateTime"
+                    type="datetime-local"
+                    defaultValue={editingGift.reservation_details?.dateTime ? 
+                      new Date(editingGift.reservation_details.dateTime).toISOString().slice(0, 16) : ''}
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button type="submit" className="flex-1">
+                  Save Changes
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditingGift(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4 text-red-600">Delete Memory</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this memory? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => handleDelete(showDeleteConfirm)}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+              <Button 
+                onClick={() => setShowDeleteConfirm(null)}
+                variant="outline" 
+                className="flex-1"
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

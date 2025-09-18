@@ -170,8 +170,7 @@ export function PostcardPreview({
               <h3 className="text-xl font-bold mb-4">
                 Memory Ready to <span className="bg-gradient-to-r from-[#B347FF] via-[#FFB800] to-[#37FF8B] bg-clip-text text-transparent font-semibold">Unwrap</span> In
               </h3>
-              <p className="text-sm mb-4">Some moments are worth waiting for the stars to align.</p>
-              <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="grid grid-cols-4 gap-2 text-center mb-4">
                 <div className="bg-white/20 rounded-lg p-2">
                   <div className="text-2xl font-bold">{Math.floor(countdown / 86400)}</div>
                   <div className="text-xs">Days</div>
@@ -189,6 +188,7 @@ export function PostcardPreview({
                   <div className="text-xs">Seconds</div>
                 </div>
               </div>
+              <p className="text-sm">Some moments are worth waiting for the stars to align.</p>
             </div>
           </div>
         )}

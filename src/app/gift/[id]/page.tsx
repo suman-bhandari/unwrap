@@ -346,6 +346,7 @@ export default function GiftPage({ params }: GiftPageProps) {
                       dateTime: gift.dateTime,
                       city: gift.city
                     }}
+                    senderName={gift.senderName}
                     giftImages={[]}
                     qrFiles={[]}
                     videoFile={gift.videoFile || null}
