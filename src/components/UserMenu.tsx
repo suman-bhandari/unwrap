@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
-import { User, Settings, LogOut, Mail, Lock, UserCircle, History } from 'lucide-react';
+import { User, Settings, LogOut, Lock, UserCircle, History } from 'lucide-react';
 import Link from 'next/link';
 
 interface UserMenuProps {
@@ -10,7 +10,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ className = '' }: UserMenuProps) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; avatar_initials?: string } } | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
@@ -52,7 +52,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
     }
   };
 
-  const getUserInitials = (user: any) => {
+  const getUserInitials = (user: { user_metadata?: { name?: string; avatar_initials?: string }; email?: string }) => {
     // First try to get initials from user metadata
     if (user?.user_metadata?.avatar_initials) {
       return user.user_metadata.avatar_initials;

@@ -32,6 +32,6 @@ export function debugHeaderSize(): void {
 
 // Add to window for easy debugging
 if (typeof window !== 'undefined') {
-  (window as any).debugHeaders = debugHeaderSize;
+  (window as unknown as { debugHeaders: typeof debugHeaderSize }).debugHeaders = debugHeaderSize;
 }
 

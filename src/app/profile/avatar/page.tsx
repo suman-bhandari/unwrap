@@ -12,7 +12,7 @@ import { User, Upload, Camera, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AvatarPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string; avatar_url?: string } } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

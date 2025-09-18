@@ -51,7 +51,7 @@ export default function CreateGiftPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'link'>('email');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string } } | null>(null);
   const router = useRouter();
   const supabase = createClient();
 

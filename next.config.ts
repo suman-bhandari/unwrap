@@ -11,12 +11,8 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/webp', 'image/avif'],
   },
-  // Disable all experimental features that might cause header issues
-  experimental: {
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
-    // Disable any features that might cause large headers
-    serverComponentsExternalPackages: [],
-  },
+  // Move serverComponentsExternalPackages to root level
+  serverExternalPackages: [],
   // Add webpack configuration to handle large headers
   webpack: (config, { isServer }) => {
     if (isServer) {

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export default function CleanupAccountPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<{ email?: string; user_metadata?: { name?: string }; app_metadata?: Record<string, unknown> } | null>(null);
 
   const checkUserData = async () => {
     setIsLoading(true);

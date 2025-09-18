@@ -9,7 +9,7 @@ interface TestGiftPageProps {
 }
 
 export default function TestGiftPage({ params }: TestGiftPageProps) {
-  const [gift, setGift] = useState<any>(null);
+  const [gift, setGift] = useState<{ id: string; title: string; message: string; recipient_name: string; sender_name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

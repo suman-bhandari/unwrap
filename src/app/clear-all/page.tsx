@@ -36,10 +36,11 @@ export default function ClearAllPage() {
         try {
           const databases = await indexedDB.databases();
           for (const db of databases) {
-            if (db.name) {
-              await new Promise((resolve, reject) => {
-                const deleteReq = indexedDB.deleteDatabase(db.name);
-                deleteReq.onsuccess = () => resolve(true);
+            const dbName = db.name;
+            if (dbName) {
+              await new Promise<void>((resolve, reject) => {
+                const deleteReq = indexedDB.deleteDatabase(dbName);
+                deleteReq.onsuccess = () => resolve();
                 deleteReq.onerror = () => reject(deleteReq.error);
               });
             }
