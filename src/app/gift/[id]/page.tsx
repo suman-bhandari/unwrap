@@ -15,6 +15,7 @@ export default function GiftPage({ params }: GiftPageProps) {
   const [gift, setGift] = useState<{
     id: string;
     recipientName: string;
+    senderName: string;
     title: string;
     message: string;
     videoUrl?: string;
