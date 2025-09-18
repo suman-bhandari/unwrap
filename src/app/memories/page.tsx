@@ -392,6 +392,7 @@ export default function MemoriesPage() {
                   venue: formData.get('venue') as string,
                   city: formData.get('city') as string,
                   dateTime: formData.get('dateTime') as string,
+                  type: editingGift.reservation_details?.type || 'experience'
                 }
               });
             }}>
